@@ -1,0 +1,22 @@
+{
+  "name": "starwarsjs",
+  "version": "0.0.0",
+  "description": "",
+  "main": "camera.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sunny-g/starwarsjs.git"
+  },
+  "author": "Sunny G <sunny.gonna@gmail.com> (http://blog.sunnyg.io)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sunny-g/starwarsjs/issues"
+  },
+  "homepage": "https://github.com/sunny-g/starwarsjs#readme",
+  "dependencies": {
+    "underscore": "^1.8.3"
+  }
+}

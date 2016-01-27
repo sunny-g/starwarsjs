@@ -1,6 +1,13 @@
 "use strict";
 
 // TODO: annotate all of this
+/**
+ * Camera
+ * @class Camera
+ * @param {DOM Element}
+ * @param {Integer}
+ * @param {Number}
+ */
 class Camera {
   constructor(canvas, resolution, focalLength) {
     this.ctx = canvas.getContext('2d');
@@ -9,16 +16,23 @@ class Camera {
     this.height = canvas.height = window.innerHeight * 0.5;
     
     // what are all these properties???
-    this.resolution = resolution;
-    this.spacing = this.width / resolution;
-    this.focalLength = focalLength || 0.8;
-    this.range = MOBILE ? 8 : 14;
+    
+    // number of columns to render
+    this.resolution = config.resolution || resolution;
+    // width of each column
+    this.spacing = this.width / this.resolution;
+    // 
+    this.focalLength = focalLength;
+    // ?? distance to render ??
+    this.range = config.MOBILE ? 8 : 14;
+    // 
     this.lightRange = 5;
+    // 
     this.scale = (this.width + this.height) / 1200;
   }
 
   render(player, map) {
-    this.drawSky(player.direction, map.skybox, map.light);
+    this.drawSky(player.direction, map.sky, map.light);
     this.drawColumns(player, map);
     // this.drawWeapon();
   }
@@ -26,7 +40,7 @@ class Camera {
   // TODO: annotate this
   drawSky(direction, sky, ambientLight) {
     var width = sky.width * (this.height / sky.height) * 2;
-    var left = (direction / CIRCLE) * -width;
+    var left = (direction / config.TAU) * -width;
     this.ctx.save();
     this.ctx.drawImage(sky.image, left, 0, width, this.height);
     
@@ -55,10 +69,17 @@ class Camera {
 
   // TODO: annotate this
   drawColumns(player, map) {
+    /*
+      for each column
+        ?? what is x?
+        get angle of ray w/in FOV
+        create the ray from map.cast()
+        draw the column
+     */
     this.ctx.save();
     for (var column = 0; column < this.resolution; column++) {
       var x = column / this.resolution - 0.5;
-      var angle = Math.atan2(x, this.focalLength);
+      var angle = config.arctan2(x, this.focalLength);
       var ray = map.cast(player, player.direction + angle, this.range);
       this.drawColumn(column, ray, angle, map);
     }
@@ -67,30 +88,33 @@ class Camera {
 
   // TODO: annotate this
   drawColumn(column, ray, angle, map) {
-    var ctx = this.ctx;
     var texture = map.wallTexture;
+    
+    // grab left-most ?? pixel ?? of the column
+    // width is column width rounded up
     var left = Math.floor(column * this.spacing);
     var width = Math.ceil(this.spacing);
     var hit = -1;
+    
+    // 
     while (++hit < ray.length && ray[hit].height <= 0);
+
+    // for each `step` in `ray`
     for (var s = ray.length - 1; s >= 0; s--) {
       var step = ray[s];
-      var rainDrops = Math.pow(Math.random(), 3) * s;
-      var rain = (rainDrops > 0) && this.project(0.1, angle, step.distance);
       if (s === hit) {
         var textureX = Math.floor(texture.width * step.offset);
         var wall = this.project(step.height, angle, step.distance);
-        ctx.globalAlpha = 1;
-        ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, wall.top, width, wall.height);
-        
-        ctx.fillStyle = '#000000';
-        ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
-        ctx.fillRect(left, wall.top, width, wall.height);
+
+        this.ctx.globalAlpha = 1;
+        this.ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, wall.top, width, wall.height);
+        this.ctx.fillStyle = '#000000';
+        this.ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
+        this.ctx.fillRect(left, wall.top, width, wall.height);
       }
       
-      ctx.fillStyle = '#ffffff';
-      ctx.globalAlpha = 0.15;
-      while (--rainDrops > 0) ctx.fillRect(left, Math.random() * rain.top, 1, rain.height);
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.globalAlpha = 0.15;
     }
   }
 }

@@ -1,19 +1,46 @@
 "use strict";
 
-var CIRCLE = Math.PI * 2;
-var MOBILE = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
 
 class Controls {
-  constructor() {
-    this.codes  = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward', 16: 'crouch' };
-    this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false , 'crouch': false };
+  constructor(player, codes) {
+    this.player = player;
+    this.codes  = codes || { 
+      37: 'rotateLeft', 39: 'rotateRight', 
+      38: 'forward', 40: 'backward', 87: 'forward', 83: 'backward',
+      // 65: 'left', 68: 'right', 
+      65: 'rotateLeft', 68: 'rotateRight',
+      16: 'crouch', 32: 'jump'
+    };
+
+    this.states = { 
+      'rotateLeft': false, 'rotateRight': false,
+      'forward': false, 'backward': false,
+      'left': false, 'right': false, 
+      'crouch': false, 'jump': false
+    };
+
+    this.canvas = config.CANVAS;
+    this.canvas.requestPointerLock = this.canvas.requestPointerLock ||
+      this.canvas.mozRequestPointerLock ||
+      this.canvas.webkitRequestPointerLock;
+
+    this.canvas.onclick = () => {
+      this.canvas.requestPointerLock();
+    }
+
+    if ("onpointerlockchange" in document) {
+      document.addEventListener('pointerlockchange', this.onPointerLockChange.bind(this), false);
+    } else if ("onmozpointerlockchange" in document) {
+      document.addEventListener('mozpointerlockchange', this.onPointerLockChange.bind(this), false);
+    } else if ("onwebkitpointerlockchange" in document) {
+      document.addEventListener('webkitpointerlockchange', this.onPointerLockChange.bind(this), false);
+    }
+
     document.addEventListener('keydown', this.onKey.bind(this, true), false);
     document.addEventListener('keyup', this.onKey.bind(this, false), false);
-    document.addEventListener('touchstart', this.onTouch.bind(this), false);
-    document.addEventListener('touchmove', this.onTouch.bind(this), false);
-    document.addEventListener('touchend', this.onTouchEnd.bind(this), false);
   }
 
+/*
   onTouch(e) {
     var t = e.touches[0];
     this.onTouchEnd(e);
@@ -23,10 +50,16 @@ class Controls {
   }
 
   onTouchEnd(e) {
-    this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false, 'crouch': false };
+    this.states = { 
+      'rotateLeft': false, 'rotateRight': false,
+      'forward': false, 'backward': false,
+      'left': false, 'right': false, 
+      'crouch': false, 'jump': false
+    };
     e.preventDefault();
     e.stopPropagation();
   }
+*/
   
   onKey(val, e) {
     var state = this.codes[e.keyCode];
@@ -34,5 +67,49 @@ class Controls {
     this.states[state] = val;
     e.preventDefault && e.preventDefault();
     e.stopPropagation && e.stopPropagation();
+  }
+
+  onMouseMovement(e) {
+    var x = (e.movementX || e.mozMovementX || e.webkitMovementX || 0);
+
+    // player.rotate(x * Math.PI / 200);
+    
+    // rotateRight
+    if (x > 0) this.player.rotate(config.ROTATERIGHT);
+    // rotateLeft
+    if (x < 0) this.player.rotate(config.ROTATELEFT);
+
+    // if (x > 0) player.rotate(x * Math.PI / 40);
+    // if (x < 0) player.rotate(x * Math.PI / 40);
+
+    // if (x > 0) {
+    //   this.states.rotateLeft = true;
+    // } else if (x < 0) {
+    //   this.states.rotateRight = true;
+    // } else {
+    //   this.states = { 
+    //     'rotateLeft': false, 'rotateRight': false,
+    //     'forward': false, 'backward': false,
+    //     'left': false, 'right': false, 
+    //     'crouch': false
+    //   };
+    // }
+    e.preventDefault && e.preventDefault();
+    e.stopPropagation && e.stopPropagation();
+  }
+
+  onPointerLockChange() {
+    console.log('in onPointerLockChange')
+    if (document.pointerLockElement === this.canvas ||
+      document.mozPointerLockElement === this.canvas ||
+      document.webkitPointerLockElement === this.canvas) {
+      console.log('The pointer lock status is now locked');
+      
+      // Do something useful in response
+      document.addEventListener('mousemove', this.onMouseMovement.bind(this), false);
+    } else {
+      console.log('The pointer lock status is now unlocked');      
+      // Do something useful in response
+    }
   }
 }

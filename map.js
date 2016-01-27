@@ -16,24 +16,30 @@ class Map {
     this.wallGrid = new Uint8Array(this.area);
     this.light = light || 0;
 
-    this.skybox = new Bitmap('assets/space_panorama.jpg', 2048, 683);
-    this.wallTexture = new Bitmap('assets/wall_texture1.jpg', 257, 257);
+    this.sky = new Bitmap('assets/sky/desert.jpg', 768, 256);
+    this.wallTexture = new Bitmap('assets/textures/wall_texture1_257x257.jpg', 257, 257);
   }
 
-  // TODO: annotate every line of this
-  cast(point, angle, range) {
+  // returns a ray
+  cast(player, angle, range) {
     var self = this;
-    var sin = Math.sin(angle);
-    var cos = Math.cos(angle);
+    var sin = config.sin(angle);
+    var cos = config.cos(angle);
     var noWall = { length2: Infinity };
     
-    return ray({ x: point.x, y: point.y, height: 0, distance: 0 });
+    return ray({
+      x: player.x, y: player.y,
+      height: 0, distance: 0
+    });
 
     /*************** helpers ***************/
-    // TODO: annotate every line of this
+    /*
+      recursively generates a ray
+     */
     function ray(origin) {
       var stepX = step(sin, cos, origin.x, origin.y);
       var stepY = step(cos, sin, origin.y, origin.x, true);
+      // if 
       var nextStep = stepX.length2 < stepY.length2
         ? inspect(stepX, 1, 0, origin.distance, stepX.y)
         : inspect(stepY, 0, 1, origin.distance, stepY.x);
